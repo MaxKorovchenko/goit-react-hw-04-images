@@ -1,10 +1,9 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { animateScroll } from 'react-scroll';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { Searchbar } from 'components/Searchbar/Searchbar';
-import { GlobalStyle } from 'services/GlobalStyle';
 import { ImageGallery } from 'components/ImageGallery/ImageGallery';
 import { Loader } from 'components/Loader/Loader';
 import { Button } from 'components/Button/Button';
@@ -12,101 +11,85 @@ import { Modal } from 'components/Modal/Modal';
 
 import { fetchImages } from 'services/fetchImages';
 
+import { GlobalStyle } from 'services/GlobalStyle';
 import { Image } from './App.styled';
 
-export class App extends Component {
-  state = {
-    searchQuery: '',
-    images: [],
-    isLoading: false,
-    error: '',
-    page: 1,
-    totalHits: null,
-    showModal: false,
-    url: '',
-  };
+export const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  //const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalHits, setTotalHits] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [url, setUrl] = useState('');
 
-  async componentDidUpdate(prevProps, prevState) {
-    const { searchQuery, page } = this.state;
+  useEffect(() => {
+    if (!searchQuery) return;
 
-    if (prevState.searchQuery !== searchQuery || prevState.page !== page) {
-      this.setState({ isLoading: true });
-
+    const getImages = async () => {
       try {
+        setIsLoading(true);
         const data = await fetchImages(searchQuery, page);
-        this.setState(({ images }) => ({
-          images: [...images, ...data.hits],
-          totalHits: data.totalHits,
-        }));
+        setImages(images => [...images, ...data.hits]);
+        setTotalHits(data.totalHits);
 
         if (!data.total) {
           toast.info('No results were found for your search!');
         }
       } catch (error) {
-        this.setState({ error: error.message });
+        //setError(error.message);
         toast.error(`Whoops, something went wrong ${error.message}`);
       } finally {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
       }
-    }
-  }
+    };
 
-  searchImages = searchQuery => {
-    this.setState({
-      searchQuery,
-      images: [],
-      page: 1,
-    });
+    getImages();
+  }, [searchQuery, page]);
+
+  const searchImages = searchQuery => {
+    setSearchQuery(searchQuery);
+    setImages([]);
+    setPage(1);
   };
 
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const loadMore = () => {
+    setPage(page => page + 1);
 
     animateScroll.scrollToBottom();
   };
 
-  openModal = url => {
-    this.setState({
-      showModal: true,
-      url,
-    });
+  const openModal = url => {
+    setShowModal(true);
+    setUrl(url);
   };
 
-  closeModal = () => {
-    this.setState({
-      showModal: false,
-      url: '',
-    });
+  const closeModal = () => {
+    setShowModal(false);
+    setUrl('');
   };
 
-  render() {
-    const { searchImages, loadMore, openModal, closeModal } = this;
-    const { searchQuery, images, isLoading, totalHits, showModal, url } =
-      this.state;
+  return (
+    <div>
+      <Searchbar search={searchQuery} onSubmit={searchImages} />
 
-    return (
-      <div>
-        <Searchbar search={searchQuery} onSubmit={searchImages} />
+      <ImageGallery items={images} openModal={openModal} />
 
-        <ImageGallery items={images} openModal={openModal} />
+      {isLoading && <Loader />}
 
-        {isLoading && <Loader />}
+      {Boolean(images.length) && (
+        <Button onClick={loadMore} total={totalHits} items={images} />
+      )}
 
-        {Boolean(images.length) && (
-          <Button onClick={loadMore} total={totalHits} items={images} />
-        )}
+      {showModal && (
+        <Modal close={closeModal}>
+          <Image src={url} alt="photo" />
+        </Modal>
+      )}
 
-        {showModal && (
-          <Modal close={closeModal}>
-            <Image src={url} alt="photo" />
-          </Modal>
-        )}
-
-        <GlobalStyle />
-        <ToastContainer position="top-right" autoClose={3000} />
-      </div>
-    );
-  }
-}
+      <GlobalStyle />
+      <ToastContainer position="top-right" autoClose={3000} />
+    </div>
+  );
+};

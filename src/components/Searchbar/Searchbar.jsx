@@ -1,59 +1,43 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { FcSearch } from 'react-icons/fc';
 
 import { Button, Form, Input } from './Searchbar.styled';
 
-export class Searchbar extends Component {
-  state = {
-    searchQuery: '',
-  };
+export const Searchbar = ({ onSubmit, search }) => {
+  const [searchQuery, setSearchQuery] = useState('');
 
-  handleChange = e => {
-    this.setState({ searchQuery: e.target.value });
-  };
+  const handleChange = e => setSearchQuery(e.target.value);
 
-  handleSubmit = e => {
-    const { searchQuery } = this.state;
-    const { onSubmit, search } = this.props;
-
+  const handleSubmit = e => {
     e.preventDefault();
     if (searchQuery === search) return;
 
     onSubmit(searchQuery);
-    this.reset();
+    setSearchQuery('');
   };
 
-  reset() {
-    this.setState({ searchQuery: '' });
-  }
+  return (
+    <>
+      <Form onSubmit={handleSubmit}>
+        <Button type="submit">
+          <FcSearch />
+        </Button>
 
-  render() {
-    const { searchQuery } = this.state;
-    const { handleChange, handleSubmit } = this;
-
-    return (
-      <>
-        <Form onSubmit={handleSubmit}>
-          <Button type="submit">
-            <FcSearch />
-          </Button>
-
-          <Input
-            onChange={handleChange}
-            value={searchQuery}
-            type="text"
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            aria-label="search"
-            required
-          />
-        </Form>
-      </>
-    );
-  }
-}
+        <Input
+          onChange={handleChange}
+          value={searchQuery}
+          type="text"
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          aria-label="search"
+          required
+        />
+      </Form>
+    </>
+  );
+};
 
 Searchbar.propTypes = {
   onSubmit: PropTypes.func.isRequired,
