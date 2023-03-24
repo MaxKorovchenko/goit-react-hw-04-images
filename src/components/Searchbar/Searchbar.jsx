@@ -20,7 +20,7 @@ export const Searchbar = ({ onSubmit, search }) => {
   return (
     <>
       <Form onSubmit={handleSubmit}>
-        <Button type="submit">
+        <Button type="submit" aria-label="search">
           <FcSearch />
         </Button>
 
@@ -31,7 +31,6 @@ export const Searchbar = ({ onSubmit, search }) => {
           autoComplete="off"
           autoFocus
           placeholder="Search images and photos"
-          aria-label="search"
           required
         />
       </Form>
