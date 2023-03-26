@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 
@@ -7,23 +7,26 @@ import { DivModal, Overlay } from './Modal.styled';
 const modalRoot = document.querySelector('#modal-root');
 
 export const Modal = ({ close, children }) => {
-  const closeModal = useCallback(
-    ({ target, currentTarget, code }) => {
-      if (target === currentTarget || code === 'Escape') {
+  useEffect(() => {
+    const closeModal = e => {
+      if (e.code === 'Escape') {
         close();
       }
-    },
-    [close]
-  );
+    };
 
-  useEffect(() => {
     document.addEventListener('keydown', closeModal);
 
     return () => document.removeEventListener('keydown', closeModal);
-  }, [closeModal]);
+  }, [close]);
+
+  const handleOverlayClick = e => {
+    if (e.target === e.currentTarget) {
+      close();
+    }
+  };
 
   return createPortal(
-    <Overlay onClick={closeModal}>
+    <Overlay onClick={handleOverlayClick}>
       <DivModal>{children}</DivModal>
     </Overlay>,
     modalRoot
